@@ -1,6 +1,6 @@
 import pytest
 
-from virtualbox_runner import detect_fragment
+from virtualbox_runner import detect_fragment, image_diff_score
 
 
 def test_region_match(tmpdir):
@@ -14,12 +14,6 @@ def test_region_match(tmpdir):
     assert detection[1] == (19, 59)
     assert detection[2] == (172, 114)
     target_file = tmpdir.join('grub_match_test.png')
-    assert detection == detect_fragment(
-        screenshot_data,
-        'tests/match_data/grub_fragment.png',
-        store_match=str(target_file)
-        )
-    assert target_file.size() > 30_000
 
     # no match at all
     no_match = detect_fragment(screenshot_data, 'tests/match_data/random_image.png')
@@ -31,3 +25,11 @@ def test_region_match(tmpdir):
 
     with pytest.raises(FileNotFoundError):
         detect_fragment(screenshot_data, 'non_existing_file.png')
+
+    assert detection == detect_fragment(
+        screenshot_data,
+        'tests/match_data/grub_fragment.png',
+        store_match=str(target_file)
+        )
+    assert target_file.size() > 30_000
+    assert image_diff_score(target_file.read_binary(), 'tests/match_data/grub_match.png') < 0.001

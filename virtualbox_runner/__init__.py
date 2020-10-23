@@ -95,6 +95,22 @@ def detect_fragment(
         cv.rectangle(img_rgb, top_left, bottom_right, (0, 0, 255), 2)
         cv.imwrite(store_match, img_rgb)
     return (max_val, top_left, bottom_right)
-    # cv.imshow('image', img_rgb)
-    # cv.waitKey(0)
-    # cv.destroyAllWindows()
+
+
+def image_diff_score(screenshot_data: bytes, reference: str) -> float:
+    """Calculate a difference score between 0 and 1.
+
+    Images are expected to be of the same size, or an error will be raised,
+    a score of 0 means they are identical, 1 that the difference is maximum
+    (that is, an image is completely black and the other completely white)
+    """
+    img_rgb = cv.imdecode(np.frombuffer(screenshot_data, np.uint8), cv.IMREAD_COLOR)
+    ref_rgb = cv.imread(reference, cv.IMREAD_COLOR)
+    if ref_rgb is None:
+        raise FileNotFoundError(f'Cannot find {reference}')
+    if img_rgb.shape != ref_rgb.shape:
+        raise ValueError(
+            f'Images have different shapes: {img_rgb.shape}, {ref_rgb.shape}'
+            )
+    diff = np.abs(img_rgb - ref_rgb)
+    return np.sum(diff) / np.prod(diff.shape) / 255
