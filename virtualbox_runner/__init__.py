@@ -4,7 +4,7 @@ from subprocess import (
     TimeoutExpired,
     )
 from time import sleep
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Union
 
 import remotevbox
 from remotevbox.machine import IMachine
@@ -12,6 +12,25 @@ import cv2 as cv
 import numpy as np
 
 _server_proc: Optional[Popen] = None
+
+Image = Union[str, bytes, np.ndarray]
+
+
+def _read_cv_image(image: Image) -> np.ndarray:
+    """Convert a file path, bytes or ndarray to ndarray.
+
+    This helper method allows the library user to send an image in different
+    ways without continuously convert.
+    """
+    if type(image) == np.ndarray:
+        return image
+    if type(image) == str:
+        ret = cv.imread(image, cv.IMREAD_COLOR)
+        if ret is None:
+            raise FileNotFoundError(f'Cannot find {image}')
+        return ret
+    if type(image) == bytes:
+        return cv.imdecode(np.frombuffer(image, np.uint8), cv.IMREAD_COLOR)
 
 
 def ensure_server_running():
@@ -64,8 +83,8 @@ def get_machine(
 
 
 def detect_fragment(
-    screenshot_data: bytes,
-    fragment: str,
+    screenshot: Image,
+    fragment: Image,
     threshold: float = 0.8,
     store_match: Optional[str] = None
         ) -> Optional[Tuple[float, Tuple[int, int], Tuple[int, int]]]:
@@ -78,8 +97,8 @@ def detect_fragment(
     If store_match is given, a file with that name will be created showing
     the matched region as a red rectangle.
     """
-    img_rgb = cv.imdecode(np.frombuffer(screenshot_data, np.uint8), cv.IMREAD_COLOR)
-    template = cv.imread(fragment, cv.IMREAD_COLOR)
+    img_rgb = _read_cv_image(screenshot)
+    template = _read_cv_image(fragment)
     if template is None:
         raise FileNotFoundError(f'Cannot find {fragment}')
     w, h, _ = template.shape
@@ -97,17 +116,15 @@ def detect_fragment(
     return (max_val, top_left, bottom_right)
 
 
-def image_diff_score(screenshot_data: bytes, reference: str) -> float:
+def image_diff_score(screenshot: Image, reference: Image) -> float:
     """Calculate a difference score between 0 and 1.
 
     Images are expected to be of the same size, or an error will be raised,
     a score of 0 means they are identical, 1 that the difference is maximum
     (that is, an image is completely black and the other completely white)
     """
-    img_rgb = cv.imdecode(np.frombuffer(screenshot_data, np.uint8), cv.IMREAD_COLOR)
-    ref_rgb = cv.imread(reference, cv.IMREAD_COLOR)
-    if ref_rgb is None:
-        raise FileNotFoundError(f'Cannot find {reference}')
+    img_rgb = _read_cv_image(screenshot)
+    ref_rgb = _read_cv_image(reference)
     if img_rgb.shape != ref_rgb.shape:
         raise ValueError(
             f'Images have different shapes: {img_rgb.shape}, {ref_rgb.shape}'
