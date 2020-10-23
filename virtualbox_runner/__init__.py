@@ -116,12 +116,18 @@ def detect_fragment(
     return (max_val, top_left, bottom_right)
 
 
-def image_diff_score(screenshot: Image, reference: Image) -> float:
+def image_diff_score(screenshot: Image, reference: Image, binary_diff=True) -> float:
     """Calculate a difference score between 0 and 1.
 
-    Images are expected to be of the same size, or an error will be raised,
-    a score of 0 means they are identical, 1 that the difference is maximum
-    (that is, an image is completely black and the other completely white)
+    Images are expected to be of the same size, or an error will be raised.
+    a score of 0 means they are identical, 1 that the difference is maximum.
+
+    If binary_diff is True (the default), the value represent the ratio of
+    pixels in the images with a color that is not exactly the same.
+
+    Otherwise, the value represents the sum of the color difference in the
+    RGB channels divided by the maximum possible value. It is 1.0 when an
+    image is completely black and the other completely white.
     """
     img_rgb = _read_cv_image(screenshot)
     ref_rgb = _read_cv_image(reference)
@@ -129,5 +135,11 @@ def image_diff_score(screenshot: Image, reference: Image) -> float:
         raise ValueError(
             f'Images have different shapes: {img_rgb.shape}, {ref_rgb.shape}'
             )
-    diff = np.abs(img_rgb - ref_rgb)
-    return np.sum(diff) / np.prod(diff.shape) / 255
+    if binary_diff:
+        diff = img_rgb != ref_rgb
+        pixel_diff = np.max(diff, -1)
+        return np.sum(pixel_diff) / np.prod(pixel_diff.shape)
+    else:
+
+        diff = cv.absdiff(img_rgb, ref_rgb)
+        return np.sum(diff) / np.prod(diff.shape) / 255
