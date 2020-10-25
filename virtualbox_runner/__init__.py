@@ -3,7 +3,7 @@ from subprocess import (
     Popen,
     TimeoutExpired,
     )
-from time import sleep
+from time import sleep, time
 from typing import Optional, Tuple, Union
 
 import remotevbox
@@ -125,7 +125,8 @@ def image_diff_score(screenshot: Image, reference: Image, binary_diff=True) -> f
     If binary_diff is True (the default), the value represent the ratio of
     pixels in the images with a color that is not exactly the same.
 
-    Otherwise, the value represents the sum of the color difference in the
+    Otherwise, the value represents the sum of the color d
+    ifference in the
     RGB channels divided by the maximum possible value. It is 1.0 when an
     image is completely black and the other completely white.
     """
@@ -140,6 +141,107 @@ def image_diff_score(screenshot: Image, reference: Image, binary_diff=True) -> f
         pixel_diff = np.max(diff, -1)
         return np.sum(pixel_diff) / np.prod(pixel_diff.shape)
     else:
-
+        # note: numpy difference won't work because they are uint8
         diff = cv.absdiff(img_rgb, ref_rgb)
         return np.sum(diff) / np.prod(diff.shape) / 255
+
+
+def wait_for_fragment(
+    machine: IMachine,
+    fragment: Image,
+    threshold: float = 0.8,
+    timeout: float = 10.0,
+    check_interval: float = 1.0
+        ) -> Tuple[float, Tuple[int, int], Tuple[int, int]]:
+    """Wait for a fragment to appear and return it, or raise TimeoutError.
+
+    This helper function periodically invokes detect_fragment waiting for a
+    fragment to appear. If it doesn't with the given threshold in the given
+    time, raises TimeoutError.
+    """
+    expiration = time() + timeout
+    while time() < expiration:
+        found = detect_fragment(
+            machine.take_screenshot_to_bytes(),
+            fragment,
+            threshold=threshold
+            )
+        if found is not None:
+            return found
+        sleep(check_interval)
+    raise TimeoutError()
+
+
+def wait_click_on_fragment(
+    machine: IMachine,
+    fragment: Image,
+    threshold: float = 0.8,
+    timeout: float = 10.0,
+    check_interval: float = 1.0,
+    left_click: bool = True,
+    right_click: bool = False,
+    force_absolute_pointer: bool = False,
+        ) -> Tuple[float, Tuple[int, int]]:
+    """Wait for a fragment, and click on the center of it.
+
+    By default it clicks with the left button, can do the right or both by
+    changing the flags.
+
+    It tries to use absolute mouse pointer if possible, or if the flag to
+    force it is provided, otherwise falls back to a trick to reset the mouse
+    pointer coordinate by moving the mouse to the screen limits in the
+    two axes one by one (it avoids moving both axis together to not trigger
+    "hot corner" actions in the guest UI).
+
+    Returns
+    -------
+    The match accuracy, and X, Y coordinates of the target point
+    """
+    region_match = wait_for_fragment(
+        machine,
+        fragment,
+        threshold=threshold,
+        timeout=timeout,
+        check_interval=check_interval,
+        )
+    center = (
+        int((region_match[1][0] + region_match[2][0]) / 2),
+        int((region_match[1][1] + region_match[2][1]) / 2),
+        )
+    if force_absolute_pointer or machine.absolute_mouse_pointer_supported():
+        machine.put_mouse_event_absolute(
+            center[0],
+            center[1],
+            left_pressed=left_click,
+            right_pressed=right_click,
+        )
+        sleep(0.3)
+        machine.put_mouse_event_absolute(
+            center[0],
+            center[1],
+            left_pressed=not left_click,
+            right_pressed=not right_click,
+        )
+    else:
+        machine.put_mouse_event(-5000, 0)
+        sleep(0.2)
+        machine.put_mouse_event(center[0], 0)
+        sleep(0.2)
+        machine.put_mouse_event(0, -5000)
+        sleep(0.2)
+        machine.put_mouse_event(0, center[1])
+        sleep(0.2)
+        machine.put_mouse_event(
+            0,
+            0,
+            left_pressed=left_click,
+            right_pressed=right_click,
+        )
+        sleep(0.3)
+        machine.put_mouse_event(
+            0,
+            0,
+            left_pressed=not left_click,
+            right_pressed=not right_click,
+        )
+    return (region_match[0], center)

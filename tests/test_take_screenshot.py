@@ -1,4 +1,3 @@
-
 def test_take_screenshot(running_machine, tmpdir):
     screenshot_data = running_machine.take_screenshot_to_bytes()
     target_file = tmpdir.join('screenshot.png')
