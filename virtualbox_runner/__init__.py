@@ -193,6 +193,8 @@ def wait_click_on_fragment(
     two axes one by one (it avoids moving both axis together to not trigger
     "hot corner" actions in the guest UI).
 
+    If the fragment is not found within the timeout, TimeoutError is raised
+
     Returns
     -------
     The match accuracy, and X, Y coordinates of the target point
