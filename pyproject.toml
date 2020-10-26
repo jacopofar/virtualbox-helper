@@ -1,7 +1,7 @@
 [tool.poetry]
-name = "virtualbox-helper"
-version = "0.1.0"
-description = "Start and control a virtual box machine"
+name = "virtualbox_helper"
+version = "0.1.1"
+description = "Start and control a virtualbox machine"
 authors = ["Jacopo Farina <jacopo1.farina@gmail.com>"]
 license = "MIT"
 
