@@ -14,7 +14,7 @@ __Features__:
 
 ## Installation
 
-    python3 -m pip install remotevbox_helper
+    python3 -m pip install virtualbox_helper
 
 
 ## Example usage
