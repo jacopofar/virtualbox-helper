@@ -1,7 +1,7 @@
 # content of conftest.py
 import pytest
 
-from virtualbox_runner import get_machine
+from virtualbox_helper import get_machine
 
 
 @pytest.fixture(scope="module")

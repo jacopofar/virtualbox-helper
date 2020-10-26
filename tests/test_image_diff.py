@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
 
-from virtualbox_runner import image_diff_score
+from virtualbox_helper import image_diff_score
 
 
 def test_image_diff():

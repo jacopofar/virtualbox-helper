@@ -1,6 +1,6 @@
 import pytest
 
-from virtualbox_runner import detect_fragment, image_diff_score
+from virtualbox_helper import detect_fragment, image_diff_score
 
 
 def test_region_match(tmpdir):

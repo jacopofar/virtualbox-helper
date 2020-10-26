@@ -1,6 +1,6 @@
 import time
 
-from virtualbox_runner import ensure_server_running, get_machine
+from virtualbox_helper import ensure_server_running, get_machine
 
 # yep, it's ugly
 

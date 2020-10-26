@@ -2,7 +2,7 @@ from time import time
 
 import pytest
 
-from virtualbox_runner import wait_for_fragment
+from virtualbox_helper import wait_for_fragment
 
 
 def test_wait_fragment(running_machine):

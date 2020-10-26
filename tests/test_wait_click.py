@@ -1,6 +1,6 @@
 import pytest
 
-from virtualbox_runner import wait_click_on_fragment, wait_for_fragment
+from virtualbox_helper import wait_click_on_fragment, wait_for_fragment
 
 
 def test_wait_click(running_machine):

@@ -1,12 +1,12 @@
 [tool.poetry]
-name = "virtualbox-runner"
+name = "virtualbox-helper"
 version = "0.1.0"
 description = "Start and control a virtual box machine"
 authors = ["Jacopo Farina <jacopo1.farina@gmail.com>"]
 license = "MIT"
 
 [tool.poetry.scripts]
-main = "virtualbox_runner.__main__:main"
+main = "virtualbox_helper.__main__:main"
 test = "pytest:console_main"
 
 
