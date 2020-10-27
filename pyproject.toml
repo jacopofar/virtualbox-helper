@@ -1,9 +1,12 @@
 [tool.poetry]
 name = "virtualbox_helper"
-version = "0.1.1"
+version = "0.1.2"
 description = "Start and control a virtualbox machine"
 authors = ["Jacopo Farina <jacopo1.farina@gmail.com>"]
 license = "MIT"
+readme = "README.md"
+repository = "https://github.com/jacopofar/virtualbox-helper"
+keywords = ["virtualbox", "opencv"]
 
 [tool.poetry.scripts]
 main = "virtualbox_helper.__main__:main"
