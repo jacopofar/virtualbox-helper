@@ -61,6 +61,15 @@ with open('screenshot.png', 'wb') as f:
 machine.send_character_string('hello world')
 machine.send_key_combination(['<enter>'])
 
+# this returns immediately, None if not found
+# store_match indicates where to store the screenshot with the match
+# highlighted as a red rectangle
+detection = detect_fragment(
+        machine.take_screenshot_to_bytes(),
+        'expected_element.png',
+        store_match='highlight_match.png'
+        )
+
 machine.poweroff()
 ```
 
